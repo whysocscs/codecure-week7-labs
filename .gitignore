@@ -1,4 +1,4 @@
-# Python and local settings
+# Python caches, legacy local environments, and local settings
 .venv/
 venv/
 __pycache__/
@@ -15,4 +15,5 @@ fuzzing-lab/**/results/
 fuzzing-lab/**/inputs/
 core
 core.*
+.ollama.log
 .DS_Store

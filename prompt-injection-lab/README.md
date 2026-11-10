@@ -4,29 +4,24 @@ CodeCure 7주차 교육용 로컬 실습장입니다. 학생이 입력과 외부
 
 ## 빠른 시작
 
-Python 3.11 이상이 필요합니다. 최초 의존성 설치에는 인터넷이 필요하지만 설치 후 기본 모의 실습은 오프라인에서 실행됩니다.
-
-### Linux / macOS
+저장소 루트의 자동 설치 스크립트는 Ubuntu/WSL Ubuntu에서 동작하며 Python 가상환경을 사용하지 않습니다. 실제 AI까지 설치하려면 다음을 실행합니다.
 
 ```bash
-cd codecure-pi-lab
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python run.py
+cd codecure-week7-labs
+./setup.sh
+./start.sh
 ```
 
-### Windows PowerShell
+`setup.sh`는 `sudo apt`로 기본 도구를 설치하고, Python 패키지는 현재 사용자의 시스템 Python 영역에 설치합니다. Ollama가 없으면 공식 설치 스크립트로 설치하며 `qwen2.5:1.5b-instruct` 모델까지 다운로드합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다.
 
-```powershell
-cd codecure-pi-lab
-py -3 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python run.py
+Ollama와 모델 다운로드 없이 모의 실습만 준비하려면 다음을 사용합니다.
+
+```bash
+./setup.sh --mock
+./start.sh
 ```
 
-활성화 정책 때문에 실행이 안 되면 활성화 대신 `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`와 `.\.venv\Scripts\python.exe run.py`를 사용하세요. 브라우저에서 **http://127.0.0.1:8000** 을 엽니다. 종료는 서버 터미널에서 `Ctrl+C`입니다. 서버는 127.0.0.1에만 바인딩하며 포트는 8000입니다.
+브라우저에서 **http://127.0.0.1:8000** 을 엽니다. 종료는 서버 터미널에서 `Ctrl+C`입니다. 서버는 `127.0.0.1`에만 바인딩합니다.
 
 ## 실습과 판정
 
@@ -38,9 +33,9 @@ Mock은 결정적인 규칙 기반 시뮬레이션으로 실제 LLM이 아닙니
 
 화면에서 힌트, 기록, 동일 입력 재실행과 JSON 내보내기를 사용할 수 있습니다. 성공·차단·판정 보류·오류는 HTTP 응답 코드와 별개입니다. 실행 기록은 `data/attempts.jsonl`에 로컬로 저장됩니다. 수동 삭제하려면 서버를 종료하고 파일을 지우세요. 자동 삭제 기능은 없습니다. 흔한 키·비밀번호 패턴과 설정된 API 키는 입력을 거절하거나 출력에서 제거하지만 모든 비밀을 식별할 수는 없으므로 실제 민감 정보는 입력하지 마세요.
 
-## 선택: Live LLM / Ollama
+## Live LLM / Ollama
 
-실제 모델은 기본적으로 호출되지 않습니다. 사용자가 직접 `.env.example`을 `.env`로 복사하고 설정한 후 서버를 재시작하면 사용합니다.
+기본 `./setup.sh`는 다음 Live 설정을 자동으로 준비합니다.
 
 ```dotenv
 LAB_MODE=live
@@ -50,7 +45,7 @@ LLM_API_KEY=
 LLM_TIMEOUT_SECONDS=180
 ```
 
-Ollama 서버를 별도로 설치·실행하고 선택한 모델을 미리 준비해야 합니다. 위 모델은 `ollama pull qwen2.5:1.5b-instruct`로 다운로드합니다. 최초 다운로드에는 인터넷이 필요합니다. CPU 노트북에서는 응답에 시간이 걸릴 수 있어 예시 시간 제한을 180초로 설정했습니다. 이 MVP의 Live 연결은 외부 전송을 막기 위해 HTTP 루프백 주소만 허용합니다. LLM에 도구, 파일, 네트워크 실행 기능을 제공하지 않습니다. 오류가 나면 오류 상태를 기록하고 Mock으로 대체하지 않습니다. 각 기록에 모드·모델명·반복 횟수가 저장됩니다. Live Target은 temperature 0으로 요청하지만 결과는 모델에 따라 달라질 수 있습니다.
+CPU 노트북에서는 응답에 시간이 걸릴 수 있어 예시 시간 제한을 180초로 설정했습니다. 이 MVP의 Live 연결은 외부 전송을 막기 위해 HTTP 루프백 주소만 허용합니다. LLM에 도구, 파일, 네트워크 실행 기능을 제공하지 않습니다. 오류가 나면 오류 상태를 기록하고 Mock으로 대체하지 않습니다. 각 기록에 모드·모델명·반복 횟수가 저장됩니다. Live Target은 temperature 0으로 요청하지만 결과는 모델에 따라 달라질 수 있습니다.
 
 ## 테스트
 
@@ -62,9 +57,9 @@ python -m pytest -q
 
 ## 문제 해결
 
-- `python`을 찾지 못하면 Linux에서 `python3`를 사용하거나 가상환경을 활성화하세요.
+- 자동 설치는 Ubuntu/WSL Ubuntu 전용이며 Python 3.11 이상이 필요합니다.
 - 8000 포트가 이미 사용 중이면 기존 프로세스를 직접 확인한 뒤 종료하거나, 별도 앱을 중지하세요.
-- Live 오류 시 Ollama 서버, 모델 이름, 로컬 주소, 시간 제한을 확인하세요. 오류는 Mock 성공으로 바뀌지 않습니다.
+- Live 오류 시 `ollama list`로 서버와 모델을 확인하고 저장소 루트의 `.ollama.log`를 확인하세요. 오류는 Mock 성공으로 바뀌지 않습니다.
 - 화면이 갱신되지 않으면 브라우저를 새로고침하세요. 다른 PC의 주소, 프록시, 터널을 통한 접속은 지원하지 않습니다.
 - 판정 보류는 모델 실패나 공격 성공의 증거가 아닙니다. 원문과 응답을 직접 비교하세요.
 

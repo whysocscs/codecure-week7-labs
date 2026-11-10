@@ -11,16 +11,7 @@ PPT의 기존 `fuzz_lab` 경로는 이 저장소의 폴더 구조와 다를 수 
 
 ## 1. 준비
 
-Windows에서는 **WSL Ubuntu** 터미널에서 진행합니다. Linux도 같은 명령을 사용할 수 있습니다. 최초 패키지·모델 설치에는 인터넷이 필요합니다. Git, Python 3.11 이상, venv, GCC, Make가 필요합니다.
-
-Ubuntu에서 설치가 필요한 경우:
-
-```bash
-sudo apt update
-sudo apt install -y git python3 python3-venv python3-pip build-essential
-```
-
-배포판에서 기본 Python이 3.11 미만이면 Python 버전과 저장소 설정을 먼저 확인하세요. `apt` 설치는 시스템을 변경하므로 직접 명령을 확인하고 실행합니다.
+Windows에서는 **WSL Ubuntu** 터미널에서 진행합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다. 자동 설치 스크립트는 Ubuntu/WSL Ubuntu를 지원하며 Python 가상환경을 사용하지 않습니다.
 
 저장소를 복제하고 폴더로 이동합니다.
 
@@ -33,17 +24,15 @@ cd codecure-week7-labs
 
 ### 실제 AI 모드
 
-WSL Ubuntu에 [Ollama](https://ollama.com/download)를 설치하고 서버를 먼저 실행합니다. 이미 Ollama 서버가 `127.0.0.1:11434`에서 실행 중이면 다시 켤 필요가 없습니다. WSL에서 `ollama list`가 실패하면 해당 WSL 환경에서 서버 상태를 확인하세요.
-
 저장소 루트에서 다음 명령을 실행합니다.
 
 ```bash
 ./setup.sh
 ```
 
-이 명령은 PI 웹 앱의 Python 가상환경과 패키지를 설치하고, Ollama에서 `qwen2.5:1.5b-instruct`를 다운로드한 뒤 Live 설정 파일을 만듭니다. 모델 파일은 약 1GB이며 실행 시 추가 메모리가 필요합니다. 8GB RAM에 GPU가 없어도 실행을 시도할 수 있지만 응답 속도는 CPU와 메모리 여유에 따라 다릅니다.
+이 명령은 `apt`로 Git·curl·Python·pip·GCC·Make를 설치하고, Python 실습 패키지를 현재 사용자의 시스템 Python 영역에 설치합니다. 이어서 Ollama가 없으면 공식 설치 스크립트로 설치하고 서버를 시작한 뒤 `qwen2.5:1.5b-instruct`를 다운로드합니다. 모델 파일은 약 1GB이며 실행 시 추가 메모리가 필요합니다. 8GB RAM에 GPU가 없어도 실행할 수 있지만 응답 속도는 CPU와 메모리 여유에 따라 다릅니다.
 
-기존 `prompt-injection-lab/.env`가 있으면 **수정하지 않습니다**. 이미 설정한 경우 원하는 모드는 그 파일에서 직접 확인하세요.
+설치 중 Ubuntu 패키지 변경을 위해 `sudo` 암호를 물을 수 있습니다. 기존 `prompt-injection-lab/.env`가 있으면 다른 값은 보존하고 `LAB_MODE=live`만 반영합니다. Ollama 설치 스크립트는 `https://ollama.com/install.sh`에서 내려받습니다.
 
 ### 모의 실습 모드
 
@@ -53,13 +42,12 @@ Ollama나 모델 없이 결정적인 시뮬레이션으로 시작하려면 다�
 ./setup.sh --mock
 ```
 
-처음 설치 후 웹 앱은 인터넷 없이 실행할 수 있습니다. Mock 결과는 실제 AI의 응답이나 공격 성공률이 아닙니다. 기존 `.env`가 있으면 위 명령도 덮어쓰지 않으므로 `LAB_MODE=mock`인지 직접 확인하세요.
+처음 설치 후 웹 앱은 인터넷 없이 실행할 수 있습니다. Mock 결과는 실제 AI의 응답이나 공격 성공률이 아닙니다. 기존 `.env`의 다른 값은 보존하고 `LAB_MODE=mock`만 반영합니다.
 
 ### 웹 앱 시작
 
 ```bash
-cd prompt-injection-lab
-.venv/bin/python run.py
+./start.sh
 ```
 
 브라우저에서 **http://127.0.0.1:8000** 을 엽니다. 화면 상단에서 `Live LLM` 또는 `시뮬레이션 · Mock`을 확인하세요. 서버를 종료하려면 터미널에서 `Ctrl+C`를 누릅니다. Live 모드에서 모델 연결 오류가 발생하면 Mock으로 자동 전환하지 않습니다.
@@ -96,5 +84,5 @@ PI 시도 기록은 `prompt-injection-lab/data/attempts.jsonl`에 남습니다. 
 
 ```bash
 cd prompt-injection-lab
-.venv/bin/python -m pytest -q
+python3 -m pytest -q
 ```
