@@ -203,4 +203,5 @@ else
 fi
 
 printf '\n설정 완료 (%s 모드). 다음 명령으로 시작하세요:\n  ./start.sh\n\n' "$selected_mode"
-printf 'AFL++ 퍼징 미션은 fuzzing-lab/README.md를 확인하세요.\n'
+printf 'Mission 1 환경 준비: cd fuzzing-lab/mission1_buffer_boundary && source ./setup_env.sh\n'
+printf '환경 준비 후 AFL++ Fuzzing 명령은 학생이 직접 실행합니다.\n'
