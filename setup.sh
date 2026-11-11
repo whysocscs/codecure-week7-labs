@@ -83,7 +83,7 @@ printf '\n[1/6] 모든 실습의 Ubuntu 패키지 설치\n'
 if ! retry "${apt_command[@]}" update || \
    ! retry "${apt_command[@]}" install -y --no-install-recommends \
     git curl ca-certificates python3 python3-venv build-essential \
-    clang llvm afl++ libclang-rt-17-dev zstd; then
+    clang llvm afl++ libclang-rt-dev zstd; then
   printf 'Ubuntu 패키지 설치에 실패했습니다. 네트워크와 apt 오류를 확인한 뒤 ./setup.sh를 다시 실행하세요.\n' >&2
   exit 1
 fi

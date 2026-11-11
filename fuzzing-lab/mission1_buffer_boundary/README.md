@@ -121,7 +121,8 @@ AFL++이 저장한 고유 Crash 수와 실제 취약점 수는 같은 개념이 
 
 ## 8. 자주 발생하는 오류와 해결법
 
-- `afl-cc: command not found`: 저장소 루트의 `./setup.sh --mock`을 실행하거나 Ubuntu에서 `sudo apt install afl++ clang llvm`을 실행합니다.
+- `afl-cc: command not found`: 저장소 루트의 `./setup.sh --mock`을 실행하거나 Ubuntu에서 `sudo apt install afl++ clang llvm libclang-rt-dev`를 실행합니다.
+- `libclang_rt.asan`을 찾지 못함: 설치된 Clang과 ASan Runtime 버전이 다른 상태입니다. `sudo apt install libclang-rt-dev`로 현재 Clang에 맞는 Runtime을 설치한 뒤 다시 빌드합니다.
 - `setup_env.sh`를 실행했지만 `$OUTPUT`이 비어 있음: `./setup_env.sh`가 아니라 `source ./setup_env.sh`로 실행했는지 확인합니다.
 - CPU 주파수 또는 `core_pattern` 오류: 최신 `setup_env.sh`가 WSL과 외부 Core Dump 처리기를 감지해 필요한 설정만 적용합니다. 같은 터미널에서 준비와 Fuzzing을 실행했는지 확인합니다.
 - Output 폴더가 이미 존재함: 기존 폴더를 지우지 말고 `source ./setup_env.sh`를 다시 실행해 새 경로를 받습니다.

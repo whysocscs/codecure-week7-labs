@@ -178,7 +178,8 @@ ASAN_OPTIONS=abort_on_error=1:symbolize=1:detect_leaks=0 \
 
 ## 8. 자주 발생하는 오류와 해결법
 
-- `gcc`, `afl-cc`, `afl-fuzz`가 없음: 저장소 루트에서 `./setup.sh --mock`을 실행하거나 필요한 Ubuntu 패키지를 설치합니다.
+- `gcc`, `afl-cc`, `afl-fuzz`가 없음: 저장소 루트에서 `./setup.sh --mock`을 실행하거나 `sudo apt install gcc make clang llvm afl++ libclang-rt-dev`를 실행합니다.
+- `libclang_rt.asan`을 찾지 못함: Clang과 ASan Runtime 버전이 맞지 않는 상태입니다. `sudo apt install libclang-rt-dev`를 실행한 뒤 다시 빌드합니다.
 - CPU 주파수 검사 오류: WSL에서 `export AFL_SKIP_CPUFREQ=1`을 사용합니다.
 - `core_pattern` 오류: 메시지를 확인한 뒤에만 `export AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1`을 사용합니다. 자동 비교 스크립트는 해당 환경을 감지해 설명과 함께 적용합니다.
 - 결과 폴더가 이미 존재함: 삭제하지 말고 `results/blind_2`, `results/guided_2`처럼 새 이름을 사용합니다. 자동 스크립트는 항상 새 폴더를 만듭니다.

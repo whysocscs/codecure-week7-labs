@@ -42,7 +42,7 @@ afl-showmap -h
 
 ```bash
 sudo apt update
-sudo apt install -y gcc make clang llvm afl++ python3
+sudo apt install -y gcc make clang llvm afl++ libclang-rt-dev python3
 ```
 
 ## 권장 진행 순서
