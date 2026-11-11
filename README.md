@@ -71,6 +71,26 @@ Direct와 Role Playing은 같은 Target과 성공 기준을 사용하므로, 같
 
 ## 3. Fuzzing 미션 시작
 
+### Fuzzing 전용 환경 준비
+
+WSL Ubuntu 터미널에서 저장소 루트로 이동한 뒤 실행합니다.
+
+```bash
+./setup.sh --fuzzing
+```
+
+이 명령은 Ubuntu 패키지 관리자로 **AFL++, Clang/LLVM, GCC/Make, Python 3**를 설치합니다. 이어서 `afl-cc`와 AddressSanitizer로 제공된 정상 Seed를 빌드·실행해 도구가 준비되었는지 확인합니다. **Ollama, 모델, PI용 Python 가상환경은 설치하거나 변경하지 않습니다.** 최초 실행에는 인터넷과 `sudo` 권한이 필요합니다.
+
+이미 설치한 환경을 다시 점검하려면 패키지 설치 없이 다음 명령을 실행하세요.
+
+```bash
+./setup.sh --check-fuzzing
+```
+
+현재 아래 미션 README는 기존 학생용 절차이며, AFL++ 기반 Mutation/Coverage-guided 실행 명령은 미션 개편 시 반영할 예정입니다.
+
+### 미션 실행
+
 **새 터미널을 열어 저장소 루트로 이동한 뒤**, 각 미션 폴더에서 진행하세요.
 
 - [미션 1: 버퍼 오버플로 경계 찾기](fuzzing-lab/mission1_buffer_boundary/README.md)
