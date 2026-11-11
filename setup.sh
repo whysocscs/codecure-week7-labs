@@ -9,11 +9,9 @@ venv_path="$project_root/.venv"
 install_marker="$project_root/.ollama-install-incomplete"
 
 usage() {
-  printf '사용법: ./setup.sh [--live | --mock | --fuzzing | --check-fuzzing]\n'
-  printf '  --live           PI 실습: Ollama와 실제 모델 준비 (기본값)\n'
-  printf '  --mock           PI 실습: Ollama 없이 모의 모드 준비\n'
-  printf '  --fuzzing        Fuzzing 실습: AFL++, 컴파일러, Python 설치 및 점검\n'
-  printf '  --check-fuzzing  Fuzzing 도구 설치 상태와 ASan 빌드만 점검\n'
+  printf '사용법: ./setup.sh [--live | --mock]\n'
+  printf '  --live  모든 실습 환경과 Ollama 실제 모델 준비 (기본값)\n'
+  printf '  --mock  모든 실습 환경을 준비하고 Ollama만 생략\n'
 }
 
 retry() {
@@ -30,7 +28,7 @@ retry() {
 
 check_fuzzing_environment() (
   local tool smoke_dir source_file seed_file
-  for tool in gcc make python3 clang afl-cc afl-fuzz afl-tmin afl-showmap; do
+  for tool in gcc make python3 clang llvm-config afl-cc afl-fuzz afl-tmin afl-showmap; do
     if ! command -v "$tool" >/dev/null 2>&1; then
       printf '필요한 명령을 찾지 못했습니다: %s\n' "$tool" >&2
       return 1
@@ -61,7 +59,7 @@ check_fuzzing_environment() (
 )
 
 case "$mode" in
-  --live|--mock|--fuzzing|--check-fuzzing) ;;
+  --live|--mock) ;;
   --help|-h) usage; exit 0 ;;
   *) usage >&2; exit 2 ;;
 esac
@@ -69,13 +67,6 @@ esac
 if [[ "$(uname -s)" != Linux ]] || ! command -v apt-get >/dev/null 2>&1; then
   printf '이 자동 설치 스크립트는 Ubuntu/WSL Ubuntu에서만 지원합니다.\n' >&2
   exit 1
-fi
-
-if [[ "$mode" == --check-fuzzing ]]; then
-  printf '\nFuzzing 도구 및 빌드 환경 점검\n'
-  check_fuzzing_environment
-  printf '\nFuzzing 환경 점검 완료.\n'
-  exit 0
 fi
 
 if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
@@ -88,27 +79,20 @@ else
   apt_command=(sudo apt-get)
 fi
 
-if [[ "$mode" == --fuzzing ]]; then
-  printf '\n[1/2] AFL++ 및 Fuzzing 필수 패키지 설치\n'
-  "${apt_command[@]}" update
-  "${apt_command[@]}" install -y \
-    git ca-certificates python3 build-essential clang llvm afl++
-
-  printf '\n[2/2] Fuzzing 도구 및 빌드 환경 점검\n'
-  if ! check_fuzzing_environment; then
-    printf 'Fuzzing 환경 점검에 실패했습니다. 설치 로그를 확인하고 ./setup.sh --check-fuzzing을 실행하세요.\n' >&2
-    exit 1
-  fi
-  printf '\nFuzzing 환경 준비 완료.\n'
-  printf '다음 단계는 fuzzing-lab/README.md를 참고하세요.\n'
-  printf '나중에 설치 상태만 확인하려면 ./setup.sh --check-fuzzing을 실행하세요.\n'
-  exit 0
+printf '\n[1/6] 모든 실습의 Ubuntu 패키지 설치\n'
+if ! retry "${apt_command[@]}" update || \
+   ! retry "${apt_command[@]}" install -y \
+    git curl ca-certificates python3 python3-venv build-essential \
+    clang llvm afl++ zstd; then
+  printf 'Ubuntu 패키지 설치에 실패했습니다. 네트워크와 apt 오류를 확인한 뒤 ./setup.sh를 다시 실행하세요.\n' >&2
+  exit 1
 fi
 
-printf '\n[1/5] Ubuntu 필수 패키지 설치\n'
-"${apt_command[@]}" update
-"${apt_command[@]}" install -y \
-  git curl ca-certificates python3 python3-venv build-essential zstd
+printf '\n[2/6] AFL++ 및 Fuzzing 빌드 환경 점검\n'
+if ! check_fuzzing_environment; then
+  printf 'Fuzzing 환경 점검에 실패했습니다. 위 오류를 확인한 뒤 ./setup.sh를 다시 실행하세요.\n' >&2
+  exit 1
+fi
 
 system_python=/usr/bin/python3
 if ! "$system_python" -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then
@@ -118,7 +102,7 @@ if ! "$system_python" -c 'import sys; sys.exit(sys.version_info < (3, 11))'; the
   exit 1
 fi
 
-printf '\n[2/5] Python 가상환경 및 실습 패키지 설치\n'
+printf '\n[3/6] Python 가상환경 및 실습 패키지 설치\n'
 if [[ ! -e "$venv_path" ]]; then
   if ! "$system_python" -m venv "$venv_path"; then
     printf '가상환경 생성에 실패했습니다. %s를 확인한 후 다시 실행하세요.\n' "$venv_path" >&2
@@ -135,7 +119,7 @@ if ! retry "$venv_path/bin/python" -m pip install --timeout 60 -r "$pi_root/requ
 fi
 
 if [[ "$mode" == --live ]]; then
-  printf '\n[3/5] Ollama 설치 확인\n'
+  printf '\n[4/6] Ollama 설치 확인\n'
   if [[ -e "$install_marker" ]] || ! command -v ollama >/dev/null 2>&1 || ! ollama --version >/dev/null 2>&1; then
     touch "$install_marker"
     installer_path="$(mktemp /tmp/codecure-ollama-install.XXXXXX.sh)"
@@ -156,7 +140,7 @@ if [[ "$mode" == --live ]]; then
     printf 'Ollama가 이미 설치되어 있습니다.\n'
   fi
 
-  printf '\n[4/5] Ollama 서버 및 실습 모델 준비\n'
+  printf '\n[5/6] Ollama 서버 및 실습 모델 준비\n'
   if ! ollama list >/dev/null 2>&1; then
     if command -v systemctl >/dev/null 2>&1 && systemctl is-system-running >/dev/null 2>&1; then
       if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
@@ -186,12 +170,12 @@ if [[ "$mode" == --live ]]; then
   fi
   selected_mode=live
 else
-  printf '\n[3/5] Ollama 설치 생략 (--mock)\n'
-  printf '\n[4/5] 모델 다운로드 생략 (--mock)\n'
+  printf '\n[4/6] Ollama 설치 생략 (--mock)\n'
+  printf '\n[5/6] 모델 다운로드 생략 (--mock)\n'
   selected_mode=mock
 fi
 
-printf '\n[5/5] 로컬 실행 설정 작성\n'
+printf '\n[6/6] 로컬 실행 설정 작성\n'
 env_path="$pi_root/.env"
 if [[ -e "$env_path" ]]; then
   env_temp="$(mktemp "$pi_root/.env.tmp.XXXXXX")"
@@ -219,4 +203,4 @@ else
 fi
 
 printf '\n설정 완료 (%s 모드). 다음 명령으로 시작하세요:\n  ./start.sh\n\n' "$selected_mode"
-printf '퍼징 미션은 fuzzing-lab/README.md를 확인하세요.\n'
+printf 'AFL++ 퍼징 미션은 fuzzing-lab/README.md를 확인하세요.\n'

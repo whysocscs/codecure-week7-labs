@@ -20,25 +20,19 @@ git clone https://github.com/whysocscs/codecure-week7-labs.git
 cd codecure-week7-labs
 ```
 
-## 2. PI/IPI 실습 준비
-
-### 실제 AI 모드
-
-저장소 루트에서 다음 명령을 실행합니다.
+저장소 루트에서 다음 명령을 한 번 실행하면 모든 실습 환경을 준비합니다.
 
 ```bash
 ./setup.sh
 ```
 
-이 명령은 `apt`로 Git·curl·Python·가상환경 도구·GCC·Make·zstd를 설치하고, 저장소의 `.venv`에 Python 실습 패키지를 설치합니다. 이어서 Ollama가 없으면 공식 설치 스크립트로 설치하고 서버를 시작한 뒤 `qwen2.5:1.5b-instruct`를 다운로드합니다. 모델 파일은 약 1GB이며 실행 시 추가 메모리가 필요합니다. 8GB RAM에 GPU가 없어도 실행할 수 있지만 응답 속도는 CPU와 메모리 여유에 따라 다릅니다.
+`setup.sh`는 AFL++·Clang/LLVM·GCC/Make·Python·zstd를 설치하고 Fuzzing Target의 AFL++/ASan 빌드를 점검합니다. 이어서 PI 실습용 `.venv`, Ollama 서버, `qwen2.5:1.5b-instruct` 모델까지 준비합니다. 모델 파일은 약 1GB이며 실행 시 추가 메모리가 필요합니다.
 
 설치 중 Ubuntu 패키지 변경을 위해 `sudo` 암호를 물을 수 있습니다. 기존 `prompt-injection-lab/.env`가 있으면 다른 값은 보존하고 `LAB_MODE=live`만 반영합니다. Ollama 설치 스크립트는 `https://ollama.com/install.sh`에서 내려받습니다.
 
 설치나 모델 다운로드가 중단되면 네트워크와 디스크 여유 공간을 확인하고 `./setup.sh`를 다시 실행하세요. Python 패키지 및 Ollama 설치와 모델 다운로드는 실패 시 자동으로 최대 세 번 시도합니다. 중단된 모델 다운로드가 이어지는지는 Ollama 버전과 오류 상황에 따라 다릅니다. 가상환경이 손상되었다는 메시지가 나오면 `.venv`를 다른 이름으로 옮긴 후 다시 실행하세요. Python 3.11 미만이면 이를 제공하는 Ubuntu 버전으로 업데이트해야 합니다.
 
-### 모의 실습 모드
-
-Ollama나 모델 없이 결정적인 시뮬레이션으로 시작하려면 다음을 실행합니다.
+Ollama와 모델만 생략하려면 다음을 사용합니다. AFL++을 포함한 나머지 실습 환경은 동일하게 설치됩니다.
 
 ```bash
 ./setup.sh --mock
@@ -46,7 +40,7 @@ Ollama나 모델 없이 결정적인 시뮬레이션으로 시작하려면 다�
 
 처음 설치 후 웹 앱은 인터넷 없이 실행할 수 있습니다. Mock 결과는 실제 AI의 응답이나 공격 성공률이 아닙니다. 기존 `.env`의 다른 값은 보존하고 `LAB_MODE=mock`만 반영합니다.
 
-### 웹 앱 시작
+## 2. PI/IPI 웹 앱 시작
 
 ```bash
 ./start.sh
@@ -71,36 +65,16 @@ Direct와 Role Playing은 같은 Target과 성공 기준을 사용하므로, 같
 
 ## 3. Fuzzing 미션 시작
 
-### Fuzzing 전용 환경 준비
-
-WSL Ubuntu 터미널에서 저장소 루트로 이동한 뒤 실행합니다.
-
-```bash
-./setup.sh --fuzzing
-```
-
-이 명령은 Ubuntu 패키지 관리자로 **AFL++, Clang/LLVM, GCC/Make, Python 3**를 설치합니다. 이어서 `afl-cc`와 AddressSanitizer로 제공된 정상 Seed를 빌드·실행해 도구가 준비되었는지 확인합니다. **Ollama, 모델, PI용 Python 가상환경은 설치하거나 변경하지 않습니다.** 최초 실행에는 인터넷과 `sudo` 권한이 필요합니다.
-
-이미 설치한 환경을 다시 점검하려면 패키지 설치 없이 다음 명령을 실행하세요.
-
-```bash
-./setup.sh --check-fuzzing
-```
-
-현재 아래 미션 README는 기존 학생용 절차이며, AFL++ 기반 Mutation/Coverage-guided 실행 명령은 미션 개편 시 반영할 예정입니다.
-
-### 미션 실행
-
 **새 터미널을 열어 저장소 루트로 이동한 뒤**, 각 미션 폴더에서 진행하세요.
 
-- [미션 1: 버퍼 오버플로 경계 찾기](fuzzing-lab/mission1_buffer_boundary/README.md)
+- [미션 1: AFL++로 Heap Buffer Overflow 찾기](fuzzing-lab/mission1_buffer_boundary/README.md)
 - [미션 2: Coverage-guided Mutation 구현](fuzzing-lab/mission2_coverage_guided/README.md)
 
 예를 들어 미션 1 시작은 다음과 같습니다.
 
 ```bash
 cd fuzzing-lab/mission1_buffer_boundary
-make
+make afl
 ```
 
 미션 2의 빈 함수는 학생이 직접 작성합니다. [Fuzzing 전체 안내](fuzzing-lab/README.md)를 함께 읽으세요.

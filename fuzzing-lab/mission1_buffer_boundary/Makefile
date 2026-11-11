@@ -1,8 +1,14 @@
 CC = gcc
 CFLAGS = -std=c11 -g -O1 -fno-omit-frame-pointer -fno-pie -no-pie -fsanitize=address
 
-.PHONY: all
+.PHONY: all afl clean
 all: build/target_easy
+
+afl: clean
+	$(MAKE) CC=afl-cc all
+
+clean:
+	rm -rf build
 
 build:
 	mkdir -p build

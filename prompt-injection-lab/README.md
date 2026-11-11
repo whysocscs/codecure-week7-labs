@@ -12,7 +12,7 @@ cd codecure-week7-labs
 ./start.sh
 ```
 
-`setup.sh`는 `sudo apt`로 기본 도구와 zstd를 설치하고, Python 패키지는 가상환경에 설치합니다. Ollama가 없으면 공식 설치 스크립트로 설치하며 `qwen2.5:1.5b-instruct` 모델까지 다운로드합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다.
+`setup.sh`는 `sudo apt`로 AFL++을 포함한 모든 실습 도구를 설치하고, PI용 Python 패키지는 가상환경에 설치합니다. Ollama가 없으면 공식 설치 스크립트로 설치하며 `qwen2.5:1.5b-instruct` 모델까지 다운로드합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다.
 
 Ollama와 모델 다운로드 없이 모의 실습만 준비하려면 다음을 사용합니다.
 
