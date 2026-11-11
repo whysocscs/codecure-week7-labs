@@ -78,7 +78,7 @@ cd fuzzing-lab/mission1_buffer_boundary
 source ./setup_env.sh
 ```
 
-미션 2의 빈 함수는 학생이 직접 작성합니다. 미션 3은 같은 Target을 AFL++의 Blind Mode와 Coverage-guided Mode로 각각 실행해 결과를 비교합니다. [Fuzzing 전체 안내](fuzzing-lab/README.md)를 함께 읽으세요.
+미션 2에서는 새 Coverage 계산, Queue 저장, Coverage 기록의 세 TODO를 순서대로 완성합니다. 미션 3은 같은 Target을 AFL++의 Blind Mode와 Coverage-guided Mode로 각각 실행해 결과를 비교합니다. [Fuzzing 전체 안내](fuzzing-lab/README.md)를 함께 읽으세요.
 
 ## 기록과 주의사항
 

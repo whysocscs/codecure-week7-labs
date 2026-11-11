@@ -69,7 +69,7 @@ Mission 1에서 실제 AFL++ 사용법을 익히고, Mission 2에서 Coverage Fe
 ## 주의 사항
 
 - Mission 1과 3의 메모리 오류는 수업을 위해 의도적으로 남긴 취약점입니다. 제공된 로컬 Target에서만 실습하세요.
-- Mission 2의 `coverage_guided_mutation()`은 학생이 직접 작성하도록 `pass`로 남겨 두었습니다.
+- Mission 2는 전체 함수를 비워 두지 않고, 새 Coverage 계산과 Queue/기록 갱신의 세 TODO를 단계별로 완성하도록 구성했습니다.
 - Seed 폴더에는 정답 입력이나 미리 만든 Crash 입력이 없습니다.
 - `build/`, `results/`, Crash와 로그는 Git에 커밋하지 않습니다.
 - Fuzzing은 확률적인 탐색입니다. 한 번 실패했다고 취약점이 없다는 뜻이 아니며, 한 번의 결과만으로 두 방식의 일반적인 우위를 단정할 수도 없습니다.

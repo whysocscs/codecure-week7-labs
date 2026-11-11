@@ -3,15 +3,15 @@
 사전 확인: 먼저 Coverage Feedback을 사용하지 않는 Random Walk를 실행하세요.
     python3 lab2_coverage_guided.py --mode baseline
 
-미션 2: 아래 coverage_guided_mutation() 함수를 직접 작성하세요.
+미션 2: 아래 TODO 1~3을 순서대로 완성하세요.
     python3 lab2_coverage_guided.py --mode guided
 
 구현 조건:
-    1. 시작 입력 "AAAA"를 Queue에 넣으세요.
-    2. Queue에서 하나를 골라 mutate()로 한 글자를 변형하세요.
-    3. target()으로 통과한 조건문(커버리지)을 확인하세요.
-    4. 이전에 없던 커버리지를 찾은 입력만 Queue에 추가하세요.
-    5. "ABCD" 경로(커버리지 4)에 도달하면 입력과 실행 횟수를 출력하세요.
+    1. 이번 실행에서 새로 발견한 Coverage를 구하세요.
+    2. 새 Coverage를 만든 입력을 Queue에 추가하세요.
+    3. 발견한 Coverage를 seen_coverage에 기록하세요.
+
+Queue 선택, Mutation, Target 실행, 결과 출력 반복문은 제공됩니다.
 
 주의: 실제 코드 커버리지 계측이나 메모리 오류가 아니라,
       통과한 if 단계(분기)를 커버리지로 삼는 교육용 모델이다.
@@ -75,9 +75,88 @@ def mutation_without_feedback(runs=500, random_seed=7):
     print(f"목표 발견까지의 실행 횟수: {found_at if found_at is not None else '미발견'}")
 
 
+def find_new_coverage(coverage, seen_coverage):
+    """STEP 1: 이번 실행에서 처음 발견한 Coverage만 반환한다."""
+    # TODO 1: coverage에는 있지만 seen_coverage에는 없는 단계를 구하세요.
+    # 힌트: Python의 set은 빼기(-)로 차집합을 구할 수 있습니다.
+    return set()
+
+
+def save_if_interesting(candidate, coverage, queue, seen_coverage):
+    """STEP 2~3: 새 Coverage를 만든 입력을 Queue와 기록에 보관한다."""
+    new_coverage = find_new_coverage(coverage, seen_coverage)
+
+    if new_coverage:
+        # TODO 2: candidate를 queue 끝에 추가하세요.
+
+        # TODO 3: coverage의 단계들을 seen_coverage에 추가하세요.
+        pass
+
+    return new_coverage
+
+
+def check_learning_steps():
+    """학생이 어느 단계까지 완성했는지 작은 예제로 확인한다."""
+    expected_new_coverage = {2}
+    actual_new_coverage = find_new_coverage({0, 1, 2}, {0, 1})
+    if actual_new_coverage != expected_new_coverage:
+        print("[STEP 1 미완성] find_new_coverage()에서 새 Coverage {2}를 구해 보세요.")
+        return False
+
+    test_queue = ["AAAA"]
+    test_seen_coverage = {0, 1}
+    save_if_interesting("ABAA", {0, 1, 2}, test_queue, test_seen_coverage)
+
+    if test_queue != ["AAAA", "ABAA"]:
+        print("[STEP 2 미완성] 새 Coverage를 만든 입력 ABAA를 Queue에 추가해 보세요.")
+        return False
+    if test_seen_coverage != {0, 1, 2}:
+        print("[STEP 3 미완성] 발견한 Coverage를 seen_coverage에 기록해 보세요.")
+        return False
+
+    print("[준비 완료] STEP 1~3을 모두 통과했습니다. Guided 탐색을 시작합니다.")
+    return True
+
+
 def coverage_guided_mutation(runs=500, random_seed=7):
-    # 미션 2: 이 함수를 직접 완성해 보세요!
-    pass
+    """Queue에 보관한 유용한 입력을 다시 Mutation하며 탐색한다."""
+    if not check_learning_steps():
+        return
+
+    rng = random.Random(random_seed)
+    queue = ["AAAA"]
+    seen_coverage = target(queue[0])
+    executed = 0
+    found_at = None
+
+    print(f"방식: Coverage-guided Mutation | 시작 Queue: {queue}")
+
+    for run in range(1, runs + 1):
+        seed = rng.choice(queue)
+        candidate = mutate(seed, rng)
+        coverage = target(candidate)
+        new_coverage = save_if_interesting(
+            candidate, coverage, queue, seen_coverage
+        )
+        executed = run
+
+        if new_coverage:
+            print(
+                f"[{run:03d}회] 새 Coverage {sorted(new_coverage)} 발견! "
+                f"입력: {candidate} | Queue 크기: {len(queue)}"
+            )
+
+        if 4 in coverage:
+            found_at = run
+            print(f"[{run:03d}회] 목표 경로 도달! 입력: {candidate}")
+            break
+
+    print(f"테스트 실행 횟수: {executed}")
+    print(f"발견한 최대 Coverage 단계: {max(seen_coverage)}/4")
+    print(f"목표 입력 발견 여부: {'성공' if found_at is not None else '미발견'}")
+    print(f"목표 발견까지의 실행 횟수: {found_at if found_at is not None else '미발견'}")
+    print(f"최종 Queue 크기: {len(queue)}")
+    print(f"최종 Queue: {queue}")
 
 
 if __name__ == "__main__":
@@ -91,5 +170,5 @@ if __name__ == "__main__":
     if args.mode == "baseline":
         mutation_without_feedback(args.runs, args.seed)
     else:
-        print("미션 2: coverage_guided_mutation()을 직접 구현해 보세요!")
+        print("미션 2: Coverage 기록과 Queue 저장 STEP 1~3을 완성해 보세요!")
         coverage_guided_mutation(args.runs, args.seed)
