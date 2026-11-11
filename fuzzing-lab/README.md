@@ -9,8 +9,21 @@ WSL Ubuntu에서 실행하는 교육용 Fuzzing 실습 묶음입니다. 각 미�
 
 ## 준비 사항
 
-WSL Ubuntu에서 `gcc`, `make`, `python3`가 준비되어 있어야 합니다.
-실습 1에는 GCC의 AddressSanitizer를 사용합니다.
+WSL Ubuntu에서 저장소 루트로 이동한 뒤 다음 명령을 실행하세요.
+
+```bash
+./setup.sh --fuzzing
+```
+
+이 명령은 `gcc`, `make`, `python3`, `clang`, `llvm`, `afl++`를 설치하고, `afl-cc`·`afl-fuzz`·`afl-tmin`·`afl-showmap`의 존재 여부와 ASan 빌드 및 정상 Seed 실행을 확인합니다. Fuzzing만 설치하므로 Ollama나 PI 실습의 `.env`/`.venv`는 변경하지 않습니다.
+
+설치 상태만 다시 확인하려면 다음 명령을 사용하세요.
+
+```bash
+./setup.sh --check-fuzzing
+```
+
+이 명령들은 **저장소 루트에서** 실행합니다. 기존 미션 자체의 실행 절차는 아래 README를 따르며, AFL++ 기반 미션 개편은 별도로 진행합니다.
 
 ## 실행 순서
 
