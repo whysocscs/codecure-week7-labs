@@ -51,7 +51,7 @@ sudo apt install -y gcc make clang llvm afl++ python3
 
 ```bash
 cd fuzzing-lab/mission1_buffer_boundary
-make afl
+source ./setup_env.sh
 ```
 
 ```bash
