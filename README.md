@@ -1,10 +1,10 @@
 # CodeCure 7주차 실습
 
-이 저장소 하나에 **Fuzzing 미션 1~2**과 **Prompt Injection 실습 1~3**이 들어 있습니다. PPT를 보면서 해당 실습을 진행하고, 자세한 미션 안내는 각 폴더의 README를 확인하세요.
+이 저장소 하나에 **Fuzzing 미션 1~3**과 **Prompt Injection 실습 1~3**이 들어 있습니다. PPT를 보면서 해당 실습을 진행하고, 자세한 미션 안내는 각 폴더의 README를 확인하세요.
 
 | 폴더 | 실습 | 방식 |
 | --- | --- | --- |
-| `fuzzing-lab/` | 버퍼 경계, Coverage-guided Mutation | WSL Ubuntu 터미널 |
+| `fuzzing-lab/` | AFL++, Coverage-guided Mutation, Blind/Guided 비교 | WSL Ubuntu 터미널 |
 | `prompt-injection-lab/` | Direct PI, Role Playing, Indirect PI | 로컬 웹 브라우저 |
 
 PPT의 기존 `fuzz_lab` 경로는 이 저장소의 폴더 구조와 다를 수 있습니다. 실제 실행은 아래 경로와 각 미션 README를 기준으로 합니다. PPT 파일은 포함하거나 수정하지 않았습니다. `make check`, `target_structured`와 수정 버전 Target도 학생용 미션에는 없습니다. 슬라이드별 교체 안내는 [PPT 대조표](docs/PPT_ALIGNMENT.md)를 확인하세요.
@@ -69,6 +69,7 @@ Direct와 Role Playing은 같은 Target과 성공 기준을 사용하므로, 같
 
 - [미션 1: AFL++로 Heap Buffer Overflow 찾기](fuzzing-lab/mission1_buffer_boundary/README.md)
 - [미션 2: Coverage-guided Mutation 구현](fuzzing-lab/mission2_coverage_guided/README.md)
+- [미션 3: 어려운 Target에서 Blind/Guided 비교](fuzzing-lab/mission3_harder_target/README.md)
 
 예를 들어 미션 1 시작은 다음과 같습니다.
 
@@ -77,7 +78,7 @@ cd fuzzing-lab/mission1_buffer_boundary
 make afl
 ```
 
-미션 2의 빈 함수는 학생이 직접 작성합니다. [Fuzzing 전체 안내](fuzzing-lab/README.md)를 함께 읽으세요.
+미션 2의 빈 함수는 학생이 직접 작성합니다. 미션 3은 같은 Target을 AFL++의 Blind Mode와 Coverage-guided Mode로 각각 실행해 결과를 비교합니다. [Fuzzing 전체 안내](fuzzing-lab/README.md)를 함께 읽으세요.
 
 ## 기록과 주의사항
 

@@ -1,7 +1,7 @@
 """실습 2: 피드백 없는 Mutation을 Coverage-guided Mutation으로 발전시키기.
 
-사전 확인: 먼저 피드백 없는 Mutation을 실행하고 한계를 확인하세요.
-    python3 lab2_coverage_guided.py
+사전 확인: 먼저 Coverage Feedback을 사용하지 않는 Random Walk를 실행하세요.
+    python3 lab2_coverage_guided.py --mode baseline
 
 미션 2: 아래 coverage_guided_mutation() 함수를 직접 작성하세요.
     python3 lab2_coverage_guided.py --mode guided
@@ -46,28 +46,33 @@ def mutate(seed, rng):
 
 
 def mutation_without_feedback(runs=500, random_seed=7):
-    """매번 원래 Seed에서 한 글자만 변형한다. 실행 결과를 다음 입력에 반영하지 않는다."""
+    """직전 입력을 계속 변형하되 Coverage를 입력 선택에 사용하지 않는다."""
     rng = random.Random(random_seed)
-    seed = "AAAA"
-    seen = target(seed)  # 최종 결과를 집계할 뿐, 입력 생성에 사용하지 않음
+    current = "AAAA"
+    seen = target(current)
+    executed = 0
+    found_at = None
 
-    print(f"방식: 피드백 없는 Mutation | 시작 입력: {seed}")
+    print(f"방식: Blind Random Walk | 시작 입력: {current}")
 
     for run in range(1, runs + 1):
-        candidate = mutate(seed, rng)  # 항상 같은 시작 입력만 변형!
-        coverage = target(candidate)
+        current = mutate(current, rng)
+        coverage = target(current)
         seen |= coverage
+        executed = run
 
         if run <= 5:
-            print(f"[{run:03d}회] 입력: {candidate} | 통과한 단계: {sorted(coverage)}")
+            print(f"[{run:03d}회] 입력: {current} | 통과한 단계: {sorted(coverage)}")
 
         if 4 in coverage:
-            print(f"[{run:03d}회] 목표 경로 도달! 입력: {candidate}")
+            found_at = run
+            print(f"[{run:03d}회] 목표 경로 도달! 입력: {current}")
             break
-    else:
-        print(f"{runs}회 안에 목표 경로에 도달하지 못함")
 
-    print(f"최종 커버리지: {len(seen)}/5 단계")
+    print(f"테스트 실행 횟수: {executed}")
+    print(f"발견한 최대 Coverage 단계: {max(seen)}/4")
+    print(f"목표 입력 발견 여부: {'성공' if found_at is not None else '미발견'}")
+    print(f"목표 발견까지의 실행 횟수: {found_at if found_at is not None else '미발견'}")
 
 
 def coverage_guided_mutation(runs=500, random_seed=7):
@@ -81,6 +86,8 @@ if __name__ == "__main__":
     parser.add_argument("--runs", type=int, default=500)
     parser.add_argument("--seed", type=int, default=7, help="난수 시작값")
     args = parser.parse_args()
+    if args.runs < 1:
+        parser.error("--runs는 1 이상이어야 합니다.")
     if args.mode == "baseline":
         mutation_without_feedback(args.runs, args.seed)
     else:
