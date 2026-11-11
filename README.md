@@ -11,7 +11,7 @@ PPT의 기존 `fuzz_lab` 경로는 이 저장소의 폴더 구조와 다를 수 
 
 ## 1. 준비
 
-Windows에서는 **WSL Ubuntu** 터미널에서 진행합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다. 자동 설치 스크립트는 Ubuntu/WSL Ubuntu를 지원하며 Python 가상환경을 사용하지 않습니다.
+Windows에서는 **WSL Ubuntu** 터미널에서 진행합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다. 자동 설치 스크립트는 Ubuntu/WSL Ubuntu와 Python 3.11 이상을 지원합니다.
 
 저장소를 복제하고 폴더로 이동합니다.
 
@@ -30,9 +30,11 @@ cd codecure-week7-labs
 ./setup.sh
 ```
 
-이 명령은 `apt`로 Git·curl·Python·pip·GCC·Make를 설치하고, Python 실습 패키지를 현재 사용자의 시스템 Python 영역에 설치합니다. 이어서 Ollama가 없으면 공식 설치 스크립트로 설치하고 서버를 시작한 뒤 `qwen2.5:1.5b-instruct`를 다운로드합니다. 모델 파일은 약 1GB이며 실행 시 추가 메모리가 필요합니다. 8GB RAM에 GPU가 없어도 실행할 수 있지만 응답 속도는 CPU와 메모리 여유에 따라 다릅니다.
+이 명령은 `apt`로 Git·curl·Python·가상환경 도구·GCC·Make·zstd를 설치하고, 저장소의 `.venv`에 Python 실습 패키지를 설치합니다. 이어서 Ollama가 없으면 공식 설치 스크립트로 설치하고 서버를 시작한 뒤 `qwen2.5:1.5b-instruct`를 다운로드합니다. 모델 파일은 약 1GB이며 실행 시 추가 메모리가 필요합니다. 8GB RAM에 GPU가 없어도 실행할 수 있지만 응답 속도는 CPU와 메모리 여유에 따라 다릅니다.
 
 설치 중 Ubuntu 패키지 변경을 위해 `sudo` 암호를 물을 수 있습니다. 기존 `prompt-injection-lab/.env`가 있으면 다른 값은 보존하고 `LAB_MODE=live`만 반영합니다. Ollama 설치 스크립트는 `https://ollama.com/install.sh`에서 내려받습니다.
+
+설치나 모델 다운로드가 중단되면 네트워크와 디스크 여유 공간을 확인하고 `./setup.sh`를 다시 실행하세요. Python 패키지 및 Ollama 설치와 모델 다운로드는 실패 시 자동으로 최대 세 번 시도합니다. 중단된 모델 다운로드가 이어지는지는 Ollama 버전과 오류 상황에 따라 다릅니다. 가상환경이 손상되었다는 메시지가 나오면 `.venv`를 다른 이름으로 옮긴 후 다시 실행하세요. Python 3.11 미만이면 이를 제공하는 Ubuntu 버전으로 업데이트해야 합니다.
 
 ### 모의 실습 모드
 
@@ -51,6 +53,15 @@ Ollama나 모델 없이 결정적인 시뮬레이션으로 시작하려면 다�
 ```
 
 브라우저에서 **http://127.0.0.1:8000** 을 엽니다. 화면 상단에서 `Live LLM` 또는 `시뮬레이션 · Mock`을 확인하세요. 서버를 종료하려면 터미널에서 `Ctrl+C`를 누릅니다. Live 모드에서 모델 연결 오류가 발생하면 Mock으로 자동 전환하지 않습니다.
+
+Live 모드에서 Ollama 연결에 문제가 생기면 다른 터미널을 열어 저장소 루트에서 다음을 실행하세요.
+
+```bash
+./ollama-control.sh status   # 연결 상태와 모델 확인
+./ollama-control.sh restart  # Ollama 서버 재시작
+```
+
+`start`와 `stop`도 사용할 수 있습니다. 기본 인자 없이 실행하면 재시작합니다. systemd 서비스가 있으면 해당 서비스를 제어하고, 그렇지 않으면 현재 사용자가 직접 실행한 Ollama 서버를 제어합니다. 서비스 제어에는 `sudo` 암호가 필요할 수 있습니다. 이 스크립트는 웹 앱이 아니라 Ollama 서버를 제어합니다. 별도 `LLM_BASE_URL`을 설정했다면 해당 서버 주소도 확인하세요.
 
 1. **Direct:** 정상 응답과 출력 형식을 바꾸려는 입력을 비교합니다.
 2. **Role Playing:** 역할이나 상황을 부여한 입력과 기본 입력을 비교합니다.
@@ -84,5 +95,5 @@ PI 시도 기록은 `prompt-injection-lab/data/attempts.jsonl`에 남습니다. 
 
 ```bash
 cd prompt-injection-lab
-python3 -m pytest -q
+../.venv/bin/python -m pytest -q
 ```

@@ -5,6 +5,20 @@ project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 pi_root="$project_root/prompt-injection-lab"
 mode="${1:---live}"
 model_name="qwen2.5:1.5b-instruct"
+venv_path="$project_root/.venv"
+install_marker="$project_root/.ollama-install-incomplete"
+
+retry() {
+  local attempt
+  for attempt in 1 2 3; do
+    if "$@"; then return 0; fi
+    if (( attempt < 3 )); then
+      printf '실패했습니다. %s초 후 다시 시도합니다 (%s/3).\n' "$((attempt * 5))" "$attempt" >&2
+      sleep "$((attempt * 5))"
+    fi
+  done
+  return 1
+}
 
 if [[ "$mode" != --live && "$mode" != --mock ]]; then
   printf '사용법: ./setup.sh [--live | --mock]\n' >&2
@@ -29,7 +43,7 @@ fi
 printf '\n[1/5] Ubuntu 필수 패키지 설치\n'
 "${apt_command[@]}" update
 "${apt_command[@]}" install -y \
-  git curl ca-certificates python3 python3-pip build-essential
+  git curl ca-certificates python3 python3-venv build-essential zstd
 
 system_python=/usr/bin/python3
 if ! "$system_python" -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then
@@ -39,21 +53,38 @@ if ! "$system_python" -c 'import sys; sys.exit(sys.version_info < (3, 11))'; the
   exit 1
 fi
 
-printf '\n[2/5] Python 실습 패키지 설치 (venv 사용 안 함)\n'
-pip_options=(install --user --upgrade)
-pip_help="$("$system_python" -m pip install --help 2>/dev/null || true)"
-if [[ "$pip_help" == *--break-system-packages* ]]; then
-  pip_options+=(--break-system-packages)
+printf '\n[2/5] Python 가상환경 및 실습 패키지 설치\n'
+if [[ ! -e "$venv_path" ]]; then
+  if ! "$system_python" -m venv "$venv_path"; then
+    printf '가상환경 생성에 실패했습니다. %s를 확인한 후 다시 실행하세요.\n' "$venv_path" >&2
+    exit 1
+  fi
 fi
-"$system_python" -m pip "${pip_options[@]}" -r "$pi_root/requirements.txt"
+if ! "$venv_path/bin/python" -m pip --version >/dev/null 2>&1; then
+  printf '가상환경이 손상되었거나 생성이 중단되었습니다. %s를 다른 이름으로 옮긴 뒤 ./setup.sh를 다시 실행하세요.\n' "$venv_path" >&2
+  exit 1
+fi
+if ! retry "$venv_path/bin/python" -m pip install --timeout 60 -r "$pi_root/requirements.txt"; then
+  printf 'Python 패키지 설치에 실패했습니다. 네트워크와 위 오류를 확인하고 ./setup.sh %s를 다시 실행하세요.\n' "$mode" >&2
+  exit 1
+fi
 
 if [[ "$mode" == --live ]]; then
   printf '\n[3/5] Ollama 설치 확인\n'
-  if ! command -v ollama >/dev/null 2>&1; then
+  if [[ -e "$install_marker" ]] || ! command -v ollama >/dev/null 2>&1 || ! ollama --version >/dev/null 2>&1; then
+    touch "$install_marker"
     installer_path="$(mktemp /tmp/codecure-ollama-install.XXXXXX.sh)"
     trap 'rm -f -- "${installer_path:-}"' EXIT
-    curl -fsSL https://ollama.com/install.sh -o "$installer_path"
-    sh "$installer_path"
+    if ! retry curl -fsSL --connect-timeout 15 --max-time 120 https://ollama.com/install.sh -o "$installer_path" || ! retry sh "$installer_path"; then
+      printf 'Ollama 설치에 실패했습니다. 네트워크와 위 오류를 확인한 뒤 ./setup.sh를 다시 실행하세요.\n' >&2
+      exit 1
+    fi
+    hash -r
+    if ! command -v ollama >/dev/null 2>&1 || ! ollama --version >/dev/null 2>&1; then
+      printf 'Ollama 설치 후 실행 확인에 실패했습니다. ./setup.sh를 다시 실행하세요.\n' >&2
+      exit 1
+    fi
+    rm -f -- "$install_marker"
     rm -f -- "$installer_path"
     trap - EXIT
   else
@@ -83,7 +114,11 @@ if [[ "$mode" == --live ]]; then
     printf 'Ollama 서버를 시작하지 못했습니다. %s를 확인하세요.\n' "$project_root/.ollama.log" >&2
     exit 1
   fi
-  ollama pull "$model_name"
+  if ! retry ollama pull "$model_name"; then
+    printf '모델 다운로드에 실패했습니다. 네트워크와 디스크 공간을 확인하고 ./setup.sh를 다시 실행하세요.\n' >&2
+    printf '모의 실습부터 진행하려면 ./setup.sh --mock을 실행하세요.\n' >&2
+    exit 1
+  fi
   selected_mode=live
 else
   printf '\n[3/5] Ollama 설치 생략 (--mock)\n'

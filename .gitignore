@@ -16,4 +16,5 @@ fuzzing-lab/**/inputs/
 core
 core.*
 .ollama.log
+.ollama-install-incomplete
 .DS_Store

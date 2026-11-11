@@ -4,7 +4,7 @@ CodeCure 7주차 교육용 로컬 실습장입니다. 학생이 입력과 외부
 
 ## 빠른 시작
 
-저장소 루트의 자동 설치 스크립트는 Ubuntu/WSL Ubuntu에서 동작하며 Python 가상환경을 사용하지 않습니다. 실제 AI까지 설치하려면 다음을 실행합니다.
+저장소 루트의 자동 설치 스크립트는 Ubuntu/WSL Ubuntu에서 동작하며 저장소의 `.venv` 가상환경을 사용합니다. 실제 AI까지 설치하려면 다음을 실행합니다.
 
 ```bash
 cd codecure-week7-labs
@@ -12,7 +12,7 @@ cd codecure-week7-labs
 ./start.sh
 ```
 
-`setup.sh`는 `sudo apt`로 기본 도구를 설치하고, Python 패키지는 현재 사용자의 시스템 Python 영역에 설치합니다. Ollama가 없으면 공식 설치 스크립트로 설치하며 `qwen2.5:1.5b-instruct` 모델까지 다운로드합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다.
+`setup.sh`는 `sudo apt`로 기본 도구와 zstd를 설치하고, Python 패키지는 가상환경에 설치합니다. Ollama가 없으면 공식 설치 스크립트로 설치하며 `qwen2.5:1.5b-instruct` 모델까지 다운로드합니다. 최초 설치에는 인터넷과 `sudo` 권한이 필요합니다.
 
 Ollama와 모델 다운로드 없이 모의 실습만 준비하려면 다음을 사용합니다.
 
@@ -50,7 +50,7 @@ CPU 노트북에서는 응답에 시간이 걸릴 수 있어 예시 시간 제�
 ## 테스트
 
 ```bash
-python -m pytest -q
+../.venv/bin/python -m pytest -q
 ```
 
 정상·공격·구조 검증·문서 인용·기존 기록 보존·내보내기·로컬 경계·Live 연결 오류를 확인합니다. 실제 LLM 실행은 별도 사용자 선택이 필요합니다.
@@ -58,8 +58,10 @@ python -m pytest -q
 ## 문제 해결
 
 - 자동 설치는 Ubuntu/WSL Ubuntu 전용이며 Python 3.11 이상이 필요합니다.
+- 설치가 중단되면 네트워크와 디스크 공간을 확인하고 저장소 루트에서 `./setup.sh`를 다시 실행하세요. 가상환경 손상 안내가 나오면 `.venv`를 다른 이름으로 옮기고 재실행하세요. Ollama 없이 시작하려면 `./setup.sh --mock`을 사용하세요.
 - 8000 포트가 이미 사용 중이면 기존 프로세스를 직접 확인한 뒤 종료하거나, 별도 앱을 중지하세요.
 - Live 오류 시 `ollama list`로 서버와 모델을 확인하고 저장소 루트의 `.ollama.log`를 확인하세요. 오류는 Mock 성공으로 바뀌지 않습니다.
+- 저장소 루트에서 `./ollama-control.sh status`로 연결 상태를 확인하고 `./ollama-control.sh restart`로 Ollama 서버를 재시작할 수 있습니다. `start`와 `stop`도 지원합니다. systemd 서비스 제어 시 `sudo`가 필요할 수 있습니다. 웹 앱은 별도로 `./start.sh`를 실행합니다.
 - 화면이 갱신되지 않으면 브라우저를 새로고침하세요. 다른 PC의 주소, 프록시, 터널을 통한 접속은 지원하지 않습니다.
 - 판정 보류는 모델 실패나 공격 성공의 증거가 아닙니다. 원문과 응답을 직접 비교하세요.
 

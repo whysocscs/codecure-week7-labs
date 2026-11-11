@@ -9,7 +9,8 @@ if [[ ! -e "$pi_root/.env" ]]; then
   exit 1
 fi
 
-if ! /usr/bin/python3 -c 'import fastapi, uvicorn, httpx, dotenv' >/dev/null 2>&1; then
+python="$project_root/.venv/bin/python"
+if ! "$python" -c 'import fastapi, uvicorn, httpx, dotenv' >/dev/null 2>&1; then
   printf 'Python 패키지가 준비되지 않았습니다. ./setup.sh를 다시 실행하세요.\n' >&2
   exit 1
 fi
@@ -30,10 +31,12 @@ if [[ "$lab_mode" == live ]]; then
     done
   fi
   if ! ollama list >/dev/null 2>&1; then
-    printf 'Ollama 서버를 시작하지 못했습니다. %s를 확인하세요.\n' "$project_root/.ollama.log" >&2
+    printf 'Ollama 서버를 시작하지 못했습니다. ./ollama-control.sh restart를 실행하거나 %s를 확인하세요.\n' "$project_root/.ollama.log" >&2
     exit 1
   fi
 fi
 
 cd "$pi_root"
-exec /usr/bin/python3 run.py
+printf '\n웹 실습을 시작합니다. 브라우저에서 여세요: http://127.0.0.1:8000\n'
+printf '종료하려면 Ctrl+C를 누르세요.\n\n'
+exec "$python" run.py
