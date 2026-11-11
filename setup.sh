@@ -8,6 +8,14 @@ model_name="qwen2.5:1.5b-instruct"
 venv_path="$project_root/.venv"
 install_marker="$project_root/.ollama-install-incomplete"
 
+usage() {
+  printf '사용법: ./setup.sh [--live | --mock | --fuzzing | --check-fuzzing]\n'
+  printf '  --live           PI 실습: Ollama와 실제 모델 준비 (기본값)\n'
+  printf '  --mock           PI 실습: Ollama 없이 모의 모드 준비\n'
+  printf '  --fuzzing        Fuzzing 실습: AFL++, 컴파일러, Python 설치 및 점검\n'
+  printf '  --check-fuzzing  Fuzzing 도구 설치 상태와 ASan 빌드만 점검\n'
+}
+
 retry() {
   local attempt
   for attempt in 1 2 3; do
@@ -20,14 +28,54 @@ retry() {
   return 1
 }
 
-if [[ "$mode" != --live && "$mode" != --mock ]]; then
-  printf '사용법: ./setup.sh [--live | --mock]\n' >&2
-  exit 2
-fi
+check_fuzzing_environment() (
+  local tool smoke_dir source_file seed_file
+  for tool in gcc make python3 clang afl-cc afl-fuzz afl-tmin afl-showmap; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      printf '필요한 명령을 찾지 못했습니다: %s\n' "$tool" >&2
+      return 1
+    fi
+    printf '  OK: %s\n' "$tool"
+  done
+
+  source_file="$project_root/fuzzing-lab/mission1_buffer_boundary/src/target_easy.c"
+  seed_file="$project_root/fuzzing-lab/mission1_buffer_boundary/seeds/easy/short.txt"
+  if [[ ! -f "$source_file" || ! -f "$seed_file" ]]; then
+    printf 'Fuzzing Target 또는 Seed 파일을 찾지 못했습니다. 저장소 루트에서 실행하세요.\n' >&2
+    return 1
+  fi
+
+  smoke_dir="$(mktemp -d)" || return 1
+  trap 'rm -r -- "$smoke_dir"' EXIT
+  if ! afl-cc -std=c11 -g -O1 -fno-omit-frame-pointer -fsanitize=address \
+    "$source_file" -o "$smoke_dir/target_easy"; then
+    printf 'AFL++와 AddressSanitizer를 사용한 컴파일에 실패했습니다.\n' >&2
+    return 1
+  fi
+  if ! ASAN_OPTIONS=abort_on_error=1:symbolize=0:detect_leaks=0 \
+    "$smoke_dir/target_easy" "$seed_file" >/dev/null; then
+    printf '컴파일된 Target의 정상 입력 실행에 실패했습니다.\n' >&2
+    return 1
+  fi
+  printf '  OK: AFL++ + ASan 컴파일 및 정상 입력 실행\n'
+)
+
+case "$mode" in
+  --live|--mock|--fuzzing|--check-fuzzing) ;;
+  --help|-h) usage; exit 0 ;;
+  *) usage >&2; exit 2 ;;
+esac
 
 if [[ "$(uname -s)" != Linux ]] || ! command -v apt-get >/dev/null 2>&1; then
   printf '이 자동 설치 스크립트는 Ubuntu/WSL Ubuntu에서만 지원합니다.\n' >&2
   exit 1
+fi
+
+if [[ "$mode" == --check-fuzzing ]]; then
+  printf '\nFuzzing 도구 및 빌드 환경 점검\n'
+  check_fuzzing_environment
+  printf '\nFuzzing 환경 점검 완료.\n'
+  exit 0
 fi
 
 if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
@@ -38,6 +86,23 @@ else
     exit 1
   fi
   apt_command=(sudo apt-get)
+fi
+
+if [[ "$mode" == --fuzzing ]]; then
+  printf '\n[1/2] AFL++ 및 Fuzzing 필수 패키지 설치\n'
+  "${apt_command[@]}" update
+  "${apt_command[@]}" install -y \
+    git ca-certificates python3 build-essential clang llvm afl++
+
+  printf '\n[2/2] Fuzzing 도구 및 빌드 환경 점검\n'
+  if ! check_fuzzing_environment; then
+    printf 'Fuzzing 환경 점검에 실패했습니다. 설치 로그를 확인하고 ./setup.sh --check-fuzzing을 실행하세요.\n' >&2
+    exit 1
+  fi
+  printf '\nFuzzing 환경 준비 완료.\n'
+  printf '다음 단계는 fuzzing-lab/README.md를 참고하세요.\n'
+  printf '나중에 설치 상태만 확인하려면 ./setup.sh --check-fuzzing을 실행하세요.\n'
+  exit 0
 fi
 
 printf '\n[1/5] Ubuntu 필수 패키지 설치\n'
